@@ -1,0 +1,11 @@
+Data for forces exerted by compliant wrist. 
+Matt Estrada
+July 21 2016
+
+LeftRight was measuring tangential direction
+Moments was just twisting the hinge joint
+Pulling was pulling the gripper in the normal direction, though not compressing
+
+Trial1 was trying to fill out the range of forces in the compliance and range of motion 
+
+pin joint is mounted 158mm out from ATI surface in current compliance/configuration

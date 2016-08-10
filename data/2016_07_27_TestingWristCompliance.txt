@@ -1,0 +1,16 @@
+Data for forces exerted by compliant wrist. 
+Matt Estrada
+July 27 2016
+
+Pivot is about 140 mm off from ATI 
+
+01_stiffness
+	Testing stiffness of the normal joint 
+	Each Trial is extended 1cm more, to get a force/displacement reading
+
+		1 cm	1.2 N
+		2 cm 	2.5 N
+		3 cm	3.5 N
+		4 cm 	4.6 N 
+
+02_moments

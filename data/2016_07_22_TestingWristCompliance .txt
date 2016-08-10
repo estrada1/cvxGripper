@@ -1,0 +1,13 @@
+Data for forces exerted by compliant wrist. 
+Matt Estrada
+July 22 2016
+
+Yesterday I realized I didn't have the sensor plugged in during any of the trials I did... 
+
+LeftRight was measuring tangential direction
+Moments was just twisting the hinge joint, trying not to impart forces
+Pulling was pulling the gripper in the normal direction three times, then compressing once
+
+Trial1 was trying to fill out the range of forces in the compliance and range of motion 
+
+pin joint is mounted 165mm out from ATI surface in current compliance/configuration

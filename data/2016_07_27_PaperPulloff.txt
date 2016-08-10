@@ -1,0 +1,46 @@
+Doing force tests with a paper cover now 
+
+Matt Estrada
+July 27 2016
+
+00_testtrials
+	All these were tests to test what the force profiles looked like 
+
+01_lever
+	Pressing on the "pivot joint" of the rigid gripper to make sure I have the correct moment arm
+	This should just be a horizontal force applied 75 mm out from the ATI surface, 
+	So when transformed out to that location it should not have a moment 
+
+02_straight
+	Three tugs
+	This one is hard since it slips and catches often 
+	29.741
+	47.066
+	67.159
+
+03_angle
+	Pulling in the +z -y direction at ~45 deg but not precisely 
+	23.495
+	42.736
+	58.600
+
+04_twist
+	22.555
+	39.678
+	60.342
+
+05_twist
+	30.633 
+	43.715 
+	51.394
+
+08_side
+	Trying to hit -19N in -y direction, seemed to have gotten it
+	Had to look closely at the angle of the adhesive 
+
+09_side
+	Trying to hit 19N in +y direction 
+	Seemed like a lot of sliding
+
+10_side
+	Repreating 09 

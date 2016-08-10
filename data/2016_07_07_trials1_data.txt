@@ -1,0 +1,4 @@
+Gripper contacting Surface 81 mm out from mounted ATI
+
++X pointing vertically up, 
++Y pointing to the side

@@ -1,0 +1,54 @@
+01 straightpull 
+	four times pulling it out straight 
+
+02_angledpull - BAD
+	A bunch (I lost count) of pulloffs using a force at the center pin of the cylindrical object 
+	I used a fish scale to pull on the pin so there should be no moments applied about that point
+	I don't think this data is very useful, I need to repeat with fewer trials and keep count
+
+03_sidepull
+	Three pulls in the -y direction
+	Applied the force without a moment on the object's center pin 
+	Looks like data was segmented well 
+
+04_angledpull
+	Three pulls in the -y +z direction
+	Pulled at approximately 45 degree angle from the gripper
+	Applied the force without a moment on the object's center pin 
+	Looks like data was segmented well 
+
+05_sidepull
+	Four pulls in the +y direction
+	Third one felt weak 
+	Otherwise same as 03
+	Seemed like going slower was more reliable 
+
+
+06_angledpull
+	Three pulls in the +y +z direction
+	Pulled at approximately 45 degree angle from the gripper
+	Otherwise same as 04
+
+07_twistup
+	TWO twists in the +x direction (trying to move in that direction) without displacing the object
+	This felt really hard, wasn't a great feeling for the gripper, that's why I stopped at 2 
+	
+08_twistuppull
+	Twisting like in 07 but pulling away too
+
+09_twistdown
+	Three trials Twisting in opposite way of 08
+
+10_sidepull 
+	Looks like side pull had compressive force to it last time 
+	Repeating, pulling in -y direction but trying not to add compressive force 
+
+11_sidepull4
+	Three trials trying to pull with full tangential force
+	Ended up having to pull out in normal direction to get adhesive to fail
+	Side of the object starts to deform once I start tugging hard enough
+	ATI does in fact have enough range, we are on the 130-10 setting
+
+12_sidepull5
+	Same as 11 but turning the poo
+	

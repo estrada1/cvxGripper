@@ -1,0 +1,35 @@
+01 straightpull 
+	four times pulling it out straight 
+
+02_angledpull - BAD
+	A bunch (I lost count) of pulloffs using a force at the center pin of the cylindrical object 
+	I used a fish scale to pull on the pin so there should be no moments applied about that point
+	I don't think this data is very useful, I need to repeat with fewer trials and keep count
+
+03_sidepull
+	Three pulls in the -y direction
+	Applied the force without a moment on the object's center pin 
+	Looks like data was segmented well 
+
+04_angledpull
+	Three pulls in the -y +z direction
+	Pulled at approximately 45 degree angle from the gripper
+	Applied the force without a moment on the object's center pin 
+	Looks like data was segmented well 
+
+05_sidepull
+	Four pulls in the +y direction
+	Third one felt weak 
+	Otherwise same as 03
+	Seemed like going slower was more reliable 
+
+
+06_angledpull
+	Three pulls in the +y +z direction
+	Pulled at approximately 45 degree angle from the gripper
+	Otherwise same as 04
+
+07_twistup
+	TWO twists in the +x direction (trying to move in that direction) without displacing the object
+	This felt really hard, wasn't a great feeling for the gripper, that's why I stopped at 2 
+	

@@ -1,0 +1,11 @@
+
+Same as before... 
+
+Gripper contacting Surface 81 mm out from mounted ATI
+
++X pointing vertically up, 
++Y pointing to the side
+
+This time I asked Bessie to separate out twist/side/straight pull
+
+Capability of the gripper to handle side pull is too strong, so they don't go until failure
