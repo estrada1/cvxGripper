@@ -24,8 +24,8 @@ function plotManualIsolines(data,grouping)
         plot3(thisLevel(:,1),thisLevel(:,3),thisLevel(:,2),'LineWidth',6,'Color',thisColor)
         %plot3(thisLevel(:,1),thisLevel(:,2),thisLevel(:,3),'LineWidth',6,'Color',thisColor)
         xlabel('F_x [N]')
-        zlabel('M_z [Nm]')    
-        ylabel('F_y [N]')
+        ylabel('M_z [Nm]')    
+        zlabel('F_y [N]')
     end
 
 end

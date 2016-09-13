@@ -6,8 +6,8 @@
 % Matt coded up active control, hao is doing passive
 close all; clear all; clc; 
 
-PASSIVE_OR_ACTIVE = 'PASSIVE';
-%PASSIVE_OR_ACTIVE = 'ACTIVE';
+%PASSIVE_OR_ACTIVE = 'PASSIVE';
+PASSIVE_OR_ACTIVE = 'ACTIVE';
 
 
 %% Set up Constants
@@ -87,7 +87,7 @@ A = [zeros(3) eye(3); zeros(3) zeros(3)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Set Initial velocity with q0 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-q0 = [0 -r 0 .3 -1 2*pi]';  % <--- Remember last thre quantities are velocities
+q0 = [0 -r 0 .3 -1 4*pi]';  % <--- Remember last thre quantities are velocities
                             % setting y0 = -r makes yTarB_0 = 0; 
 u0 = [0 0 0]';
 
@@ -114,8 +114,8 @@ qpTarB = [xpTarB_RefT; ypTarB_RefT; q(6)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Position and Velocity of TarB in reference frame N 
 % The gripper is attached to rigid body Tar at TarB 
-xTarB_N = x - r*sin(theta);
-yTarB_N = y + r*cos(theta);
+xTarB_N = q(1) - r*sin(theta);
+yTarB_N = q(2) + r*cos(theta);
 xpTarB_N = xp - r*cos(theta)*thetap;
 ypTarB_N = yp - r*sin(theta)*thetap;
 
@@ -226,8 +226,8 @@ legend('vxTar','vyTar','v \theta Tar')
 figure
 
 load('3DscatterLimit_AsymmetricPaper_Sept8')
-limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
-limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
+limit(isinf(limit(:,3)),:) = [];    % Get rid of erraneous vals
+limit(isnan(limit(:,3)),:) = [];    % Get rid of erraneous vals
 limitWrist = (trans(r)*limit')';
 limitWrist=limit;
 
@@ -239,3 +239,34 @@ plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on;
 plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
 
 
+%%
+figure
+subplot(4,1,1)
+set(gca,'fontsize',14); hold on;
+plot(t,U(1,:),t, U(2,:), t, U(3,:))
+xlabel('time [sec]')
+legend('Fx','Fy','Mz')
+
+subplot(4,1,2)
+set(gca,'fontsize',14); hold on;
+plot(t,K)
+xlabel('time [sec]')
+legend('Kinetic Energy')
+
+subplot(4,1,3:4)
+set(gca,'fontsize',14); hold on;
+plotManualIsolines(limitWrist,limitWrist(:,2))
+axis tight
+plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
+plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
+
+
+%%
+
+fig = gcf;
+fig.PaperPositionMode = 'auto'
+fig_pos = fig.PaperPosition;
+fig.PaperSize = [fig_pos(3) fig_pos(4)];
+
+addpath('functionsCvx','functionsHelper','dataGenerated')
+print(fig,'ActiveGrasp','-dpdf')

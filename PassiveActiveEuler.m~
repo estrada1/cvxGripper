@@ -6,8 +6,8 @@
 % Matt coded up active control, hao is doing passive
 close all; clear all; clc; 
 
-PASSIVE_OR_ACTIVE = 'PASSIVE';
-%PASSIVE_OR_ACTIVE = 'ACTIVE';
+%PASSIVE_OR_ACTIVE = 'PASSIVE';
+PASSIVE_OR_ACTIVE = 'ACTIVE';
 
 
 %% Set up Constants
@@ -87,7 +87,8 @@ A = [zeros(3) eye(3); zeros(3) zeros(3)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Set Initial velocity with q0 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-q0 = [0 0 0 .3 -1 2*pi]';  % <--- Remember last thre quantities are velocities
+q0 = [0 -r 0 .3 -1 4*pi]';  % <--- Remember last thre quantities are velocities
+                            % setting y0 = -r makes yTarB_0 = 0; 
 u0 = [0 0 0]';
 
 
@@ -102,11 +103,21 @@ q = q0; u = u0;
 theta = q(3); xp = q(4); yp = q(5); thetap = q(6); 
 minP = 0; 
     
-% Useful to track the velocity of point TarB , dubbed qpTarB
-xpTarB = sin(theta)*yp + cos(theta)*xp - r*thetap;
-ypTarB = cos(theta)*yp - sin(theta)*xp;
+% Useful to track the velocity of point TarB in reference frame Tar , dubbed qpTarB
+xpTarB_RefT = sin(theta)*yp + cos(theta)*xp - r*thetap; % In reference frame Tar
+ypTarB_RefT = cos(theta)*yp - sin(theta)*xp;
 KineticEnergy = 0.5*ITarzz*thetap^2 + 0.5*mTar*(xp^2+yp^2);
-qpTarB = [xpTarB; ypTarB; q(6)];
+qpTarB = [xpTarB_RefT; ypTarB_RefT; q(6)];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% HAO THESE NUMBERS ARE USEFUL FOR YOU %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Position and Velocity of TarB in reference frame N 
+% The gripper is attached to rigid body Tar at TarB 
+xTarB_N = q(1) - r*sin(theta);
+yTarB_N = q(2) + r*cos(theta);
+xpTarB_N = xp - r*cos(theta)*thetap;
+ypTarB_N = yp - r*sin(theta)*thetap;
 
 % Time array 
 t = (0:n-1)*dt; 
@@ -140,10 +151,10 @@ for ii = 1:n
     B = [zeros(3); thisM];
     
     % Point of Contact velcity
-    xpTarB = sin(theta)*yp + cos(theta)*xp - r*thetap;
-    ypTarB = cos(theta)*yp - sin(theta)*xp;
+    xpTarB_RefT = sin(theta)*yp + cos(theta)*xp - r*thetap;
+    ypTarB_RefT = cos(theta)*yp - sin(theta)*xp;
     KineticEnergy = 0.5*ITarzz*thetap^2 + 0.5*mTar*(xp^2+yp^2);
-    qpTarB = [xpTarB; ypTarB; q(6)];
+    qpTarB = [xpTarB_RefT; ypTarB_RefT; q(6)];
 
     if strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
 
@@ -221,6 +232,17 @@ limitWrist = (trans(r)*limit')';
 limitWrist=limit;
 
 figure; set(gca,'fontsize',20); hold on;
+plotManualIsolines(limitWrist,limitWrist(:,2))
+axis tight
+
+plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
+plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
+
+
+%%
+figure
+
+set(gca,'fontsize',20); hold on;
 plotManualIsolines(limitWrist,limitWrist(:,2))
 axis tight
 
