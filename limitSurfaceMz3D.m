@@ -7,19 +7,19 @@
 %% Set up parameters 
 
 close all; clear; clc; 
-dataName = 'dataGenerated/3DscatterLimit_AsymmetricPaper_Sept8'; 
+dataName = 'dataGenerated/3DscatterLimit_Adhesive20_Sept13'; 
 
 % Define geometry and adhesion capabilities 
 defineParameters; % A, alpha, maxAdhesion 
 
-A = Awrist; 
+A = Acm; 
 maxFy = cvxGripMaxFy( A, constraints)
 
 %% Sweep space 
 limit = []; 
 
-for fy = 0:1:maxFy
-    
+%for fy = 0:1:maxFy
+for fy = 0:2:maxFy   
     [thisLimit, tensions] = limitSurfaceMz2D(A,constraints, fy);
     
     limit = [limit; thisLimit];

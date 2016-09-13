@@ -24,11 +24,8 @@ ITarzz                          =  0.0128;                  % kg*m^2            
 mTar                            =  1.5526;                 % kg                  Constant
 r                               =  0.1143;                 % m                   Constant
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Equations of Motion from Motion Genesis
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % EOM
-%F_applied = fx*nx> + fy*ny>        force applied in fixed frame 
+%F_applied = fx*nx> + fy*ny> 
 % xpp = fx/mTar;
 % ypp = fy/mTar;
 % thetapp = (mz-r*fx*cos(theta)-r*fy*sin(theta))/ITarzz;
@@ -39,12 +36,11 @@ r                               =  0.1143;                 % m                  
 % ypp = (fx*sin(theta)+fy*cos(theta))/mTar;
 % thetapp = (mz-r*fx)/ITarzz;
 
-% F_applied = fx*nx> + fy*ny> 
+
 Mn = @(theta) [1/mTar 0 0; ...
     0 1/mTar 0; ...
     -r*cos(theta)/ITarzz -r*sin(theta)/ITarzz 1/ITarzz];
 
-% F_applied = fx*Tarx> + fy*Tary>
 M = @(theta) [cos(theta)/mTar -sin(theta)/mTar 0; ...
     sin(theta)/mTar cos(theta)/mTar 0; ...
     -r/ITarzz 0 1/ITarzz];
@@ -112,12 +108,10 @@ for ii = 1:n
     % Minimize Power
 %     [ minP, Fnet, tensions, components ] = cvxGripMinP( Awrist, constraints, qpTarB);
 %     u = Fnet;
-
-    % Rotation matrix from frame N to frame R 
     R_TN = [cos(theta), sin(theta), 0;  -sin(theta), cos(theta), 0;  0, 0, 1];
     % Oppose Velocity
     %[ beta, unit_vect, components ] = cvxGripBeta( Awrist, -qpTarB, constraints);
-    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_TN*q(4:6), constraints);
+    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -q(4:6), constraints);
     u = trans(r)*components; 
     
     % Euler Method 
@@ -173,9 +167,6 @@ plot(t,QTarB(1,:),t, QTarB(2,:), t, QTarB(3,:))
 title('Velocity of point')
 legend('vxTar','vyTar','v \theta Tar')
 %% Force Space
-figure
-
-plot3(U(1,:), U(2,:), U(3,:)); hold on; 
-plot3(U(1,:), U(2,:), U(3,:),'.')
-
+% figure
+% scatter(U(1,:), U(2,:), U(3,:),'*')
 
