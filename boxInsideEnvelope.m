@@ -1,15 +1,27 @@
+close all; clear; clc; 
+addpath('functionsCvx','functionsHelper','dataGenerated')
 
 r = 9/2*0.0254; % Distance from object COM to object surface
 d = 0.081;      % Distance from object surface to ATI
 trans = @(r) [1 0 0; 0 1 0; r 0 1];
 
+% % Load in simulated limit surface
+% load('3DscatterLimit_paperAsymmetric.mat') % limit variable represents as accelerations about object's COM
+% limitWrist = (trans(r)*limit')';
+% figure; set(gca,'fontsize',16); hold on;
+% scatter3(limitWrist(:,1),limitWrist(:,2),limitWrist(:,3),10) % Predicted Limit
+
 % Load in simulated limit surface
-load('3DscatterLimit_paperAsymmetric.mat') % limit variable represents as accelerations about object's COM
-limitWrist = (trans(r)*limit')';
+load('dataGenerated/3DscatterLimit_AsymmetricPaper_Sept8') % limit variable represents as accelerations about object's COM
+limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
+limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
+%limitWrist = (trans(r)*limit')';
+limitWrist=limit;
 
+figure; set(gca,'fontsize',20); hold on;
+plotManualIsolines(limitWrist,limitWrist(:,2))
+axis tight
 
-figure; set(gca,'fontsize',16); hold on;
-scatter3(limitWrist(:,1),limitWrist(:,2),limitWrist(:,3),10) % Predicted Limit
 
 box = [ -5 5; 0 6; -0.08 0.08]; % [xmin xmax; ymin ymax; zmin zmax]
 [wristx, wristy, wristz] = meshgrid(box(1,1):box(1,2),box(2,1):box(2,2),box(3,1):.01:box(3,2));

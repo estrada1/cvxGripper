@@ -1,26 +1,21 @@
 %% Making sense of the shape of the limit curve
-close all;
-clear;
-clc; 
+close all; clear; clc; 
+addpath('functionsCvx','functionsHelper','dataGenerated')
 
-% Define Parameters
-alpha = 11.35;      % [deg]
-%alpha = 50;
-r = 9/2*0.0254;     % [m]
-h = .009;           % [m] offset from surface
-maxAdhesion = 19;
-
-trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
+defineParameters; 
 
 % Set up problem
-A = defineGeometry(alpha,r);
-
-[limit tensions] = convexGripperMz2DSweep(A,maxAdhesion); 
+constraints = [maxAdhesion; maxAdhesion; 1000000; 1000000];
+[limit tensions] = limitSurfaceMz2D(A,constraints); 
 
 %% Plot
-limitWrist = (trans(r)*limit')'
-figure; hold on; set(gca,'fontsize',16);
+limitWrist = (trans(r)*limit')';
 
+plot(limitWrist(:,1), limitWrist(:,3)); hold on; 
+plot(limitWrist(:,1), limitWrist(:,3),'*')
+
+%% Understanding Envelope 
+figure; hold on; set(gca,'fontsize',16);
 % Hand-copied 
 adhesive1 = [19 19 7.6171 0;...
             19 19 0 7.6171;...
@@ -48,7 +43,7 @@ ylabel('T_z [Nm]')
 title('Projected Envelope Shape (F_y = 0)')
 legend('Limit','Adhesive1 Fails','Adhesion2 Fails')
 
-%%
+%% Understanding Envelope 
 figure
 scatter3(limitWrist(:,1),limitWrist(:,3),1:length(limitWrist),'*')
 

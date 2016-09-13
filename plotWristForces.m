@@ -17,9 +17,26 @@ for nn = 1:mTrials
     scatter3(thisTrial(:,1),thisTrial(:,2),thisTrial(:,3),60,'.')
 end
 
-[wristx, wristy, wristz] = meshgrid(box(1,1):box(1,2),box(2,1):box(2,2),box(3,1):.01:box(3,2));
-wristBox = [reshape(wristx,[numel(wristx) 1]) reshape(wristy,[numel(wristx) 1]) reshape(wristz,[numel(wristx) 1])];
-scatter3(wristBox(:,1),wristBox(:,2),wristBox(:,3),10)
+% Plot bounding box
+
+%     [wristx, wristy, wristz] = meshgrid(box(1,1):box(1,2),box(2,1):box(2,2),box(3,1):.01:box(3,2));
+%     wristBox = [reshape(wristx,[numel(wristx) 1]) reshape(wristy,[numel(wristx) 1]) reshape(wristz,[numel(wristx) 1])];
+%     scatter3(wristBox(:,1),wristBox(:,2),wristBox(:,3),10)
+
+    sx = 10;
+    sy = 6;
+    sz = .15;
+    x=([0 1 1 0 0 0;1 1 0 0 1 1;1 1 0 0 1 1;0 1 1 0 0 0]-1/2)*sx;
+    y=([0 0 1 1 0 0;0 1 1 0 0 0;0 1 1 0 1 1;0 0 1 1 1 1])*sy;
+    z=([0 0 0 0 0 1;0 0 0 0 0 1;1 1 1 1 0 1;1 1 1 1 0 1]-1/2)*sz;
+    for i=1:6
+        h=patch(x(:,i),y(:,i),z(:,i),[0 0 0.3]);
+        set(h,'edgecolor','k','FaceAlpha',0.2)
+    end
+plot3([-5 5],[0 0],[0 0],'b','LineWidth',3)
+plot3([0 0],[0 6],[0 0],'b','LineWidth',3)
+plot3([0 0],[0 0],[-.075 .075],'b','LineWidth',3)
+
 view(3)
 
 xlabel('F_x [N]')
@@ -27,6 +44,7 @@ ylabel('F_y [N]')
 zlabel('T_z [Nm]')
 %title('Force/Torque at Pivot')
 legend(files{:,1})
+
 
 %% Pulling in a bunch of directions 
 

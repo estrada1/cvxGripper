@@ -1,4 +1,5 @@
 %% Plotting curve surface limit data
+addpath('functionsCvx','functionsHelper','dataGenerated')
 
 % This is a mesh table that has the first row/column as 0-180
 limit3D = csvread('data/3D Limit Curve_every10deg.csv');

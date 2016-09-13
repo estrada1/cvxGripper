@@ -1,0 +1,74 @@
+Author: Matt Estrada
+Date: 9/7/2016
+Description: Keeping track of the files used to generate figures for Estrada ICRA 2017
+
+Most of these figures are located in the folder, and three very useful subfolders: 
+	cvxGripper
+		functionsCvx
+		functionsHelper
+		dataGenerated - .mat files generated from code
+		data - actual data gathered 
+
+This code uses Boyd's Matlab toolbox, cvx
+		http://cvxr.com/cvx/
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Figure Generation Scripts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Varying Alpha 
+	varyingAlpha.m 
+
+Limit surface fig
+	manualIsolines.m
+		plotManualIsolines.m 	for actual plotting 
+		limitSurfaceMz3D.m 		for generating data 
+
+Pull-off tests figure
+	DataCompare.m
+	
+	
+
+Free Flyer Limits
+	freeFlyerLimit.m
+
+Articulated Jacobian Arm 
+	jacobianMapping.m 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Helper Functions 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+defineParameters.m 
+	Defines geometry and adhesion variables
+
+defineGeometry.m
+	Produces Acm matrix for a given geometry and object radius
+	Acm means that it is forces/moments able to be exerted at COM
+
+
+limitSurfaceMz3D.m 
+	Generates limit surface over fx, fy, mz 
+
+	limitSurfaceMz2D.m
+		Sweep limit surface over fx / mz, for a given value of fy
+
+LimitSurfaceMesh.m
+	Sweep limit surface, calculating max fy for a given fx / mz
+	This was more conducive to plotting using surf.m or mesh.m functions 
+
+
+
+
+pulloffParse
+	Meant for pull-off experiment
+	Take a data filename in, spits out Fx, Fy, Mz failure point
+
+pulloffData
+	High level script for generating and plotting pulloff data from datafiles
+	Defines where all the files are then calls pulloffParse on each file
+
+powerActiveControl
+	Optimizing for instantaneous power loss for kinetic energy 
+	Given a velocity, what is the power transfer when you tug in a givendirection? 
+	Early iterations on a plot to display this

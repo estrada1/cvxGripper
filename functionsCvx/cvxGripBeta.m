@@ -1,11 +1,9 @@
-function [ beta, unit_vect, components ] = cvxGripBeta( alpha, r, d, constraints)
+function [ beta, unit_vect, components ] = cvxGripBeta( A, d, constraints)
 % Optimize value for max/min Mz attainable for a given fx anf fy exerted
 % ALPHA IS IN DEGREES
 % constraints = maximum values allowed for [ t1 t2 c1 c2 ]
+% d is "direction" of tug, or constrained proportions of fx:fy:mz
 % objective dictates whether we maximize or minimize this
-
- A = defineGeometry(alpha,r);
-
 
  cvx_begin quiet
 

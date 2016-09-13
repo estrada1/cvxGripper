@@ -63,19 +63,36 @@ Point $B_{cm}$ is located at the body's center of mass.
 
 Vectors directions as a function of $\alpha$, for the 2D case.  
 
-\begin{align*}
-t_{1} = [\cos{\alpha} , \sin{\alpha}, -r ]^{T}	\\
-t_{2} = [-\cos{\alpha} , \sin{\alpha}, r ]^{T}	\\
-c_{1} = [\sin{ \alpha } , -\cos{ \alpha }, 0 ]^{T}	\\
-c_{2} = [-\sin{ \alpha } , -\cos{ \alpha }, 0 ]^{T}	\\ 
-\end{align*}
+%\begin{align*}
+%t_{1} = [\cos{\alpha} , \sin{\alpha}, -r ]^{T}	\\
+%t_{2} = [-\cos{\alpha} , \sin{\alpha}, r ]^{T}	\\
+%c_{1} = [\sin{ \alpha } , -\cos{ \alpha }, 0 ]^{T}	\\
+%c_{2} = [-\sin{ \alpha } , -\cos{ \alpha }, 0 ]^{T}	\\ 
+%\end{align*}
 
-Where compressive forces are denoted $c_{1}$, $c_{2}$, and tension in adhesive is denoted  $t_{1}$, $t_{2}$, all of which are unit vectors. 
+Where unit vectors are defined as: 
+
+\begin{equation}
+\hat{t_{1}} =
+\begin{bmatrix}
+           \cos{\alpha}  \\
+           \sin{\alpha} \\
+           -r \\
+\end{bmatrix} =
+ \frac{1}{||T_{1}||}
+\begin{bmatrix}
+           \vec{T_{1}} \cdot \hat{n_{x}}  \\
+           \vec{T_{1}} \cdot \hat{n_{y}} \\
+           \vec{-r}\,  x \vec{T_{1}} \cdot \hat{n_{z}} \\
+\end{bmatrix} 
+\end{equation}
+         
+Where compressive forces are denoted $c_{1}$, $c_{2}$, and tension in adhesive is denoted  $t_{1}$, $t_{2}$.
 
 Putting this in a matrix format yields: 
 
 \begin{equation}
-A =  [t_{1},  t_{2},  c_{1},  c_{2}]
+A =  [\hat{t_{1}} \,\,  \hat{t_{2}}\,\,  \hat{c_{1}}\,\,   \hat{c_{2}}]
 \end{equation}
 	
 Where A is ${\rm I\!R} ^{m x n}$ in this 2D case. We have $m$ = 3 DOF and $n$ = 4 force vectors.
@@ -124,8 +141,30 @@ If we assume $ F_{net} = \beta*d $ we can choose a general proportion of net for
 	\end{aligned}
 \end{equation*}
 
-Our adhesion limitations, and any structural limitation we would put on the compressive forces are contained in $x_{max}$. 
-	
+Our adhesion limitations, and any structural limitation we would put on the compressive forces are contained in $x_{max}$. To clarify:  
+
+\begin{equation*}
+x = 
+\begin{bmatrix}
+           \,\, ||\vec{T_{1}}|| \,\,\\
+           ||\vec{T_{2}}|| \\
+           ||\vec{C_{1}}|| \\
+           ||\vec{C_{2}}|| \\
+\end{bmatrix} 
+x_{max} = 
+\begin{bmatrix}
+           adhesive1_{max} \\
+           adhesive2_{max} \\
+           contact1_{max} \\
+           contact2_{max} \\ 
+\end{bmatrix} 
+F_{net} = 
+\begin{bmatrix}
+           \Sigma F_{x} \\
+           \Sigma F_{y}\\
+           \Sigma M_{z}\\
+\end{bmatrix} 
+\end{equation*}	
 }
 
 
@@ -313,6 +352,23 @@ Bringing this to consider all three variables again, that patch of possible forc
 \end{figure}
 
 If the cube extends beyond this funnel, adhesion capabilities will be exceeded. 
+
+}
+
+\frame
+{
+\frametitle{Optimize Losing Kinetic Energy}
+
+\begin{equation*}
+	\begin{aligned}
+	& \underset{x}{\text{maximize}}
+	& & P = \vec{F_{net} } \cdot \vec{v} \\
+	& \text{subject to}
+	& & F_{net} = A * x \\
+	&
+	& & 0 \leq x \leq x_{max}
+	\end{aligned}
+\end{equation*}
 
 }
 

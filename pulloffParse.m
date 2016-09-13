@@ -1,4 +1,7 @@
 function [trials] = pulloffParse(filename,showplots,handPicked)
+
+addpath('functionsCvx','functionsHelper','dataGenerated')
+
     % Plotting ATI Trials to measure force at adhesive failure
     % Bessie and Matt 
     % July 2016

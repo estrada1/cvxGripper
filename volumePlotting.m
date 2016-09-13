@@ -1,8 +1,8 @@
 close all; clear; clc;
 %load('3DscatterLimit_paperAsymmetric');
+addpath('functionsCvx','functionsHelper','dataGenerated')
 
 trans = @(d)[1 0 0; 0 1 0; d 0 1];
-
 alpha = 11.35;      % [deg]
 r = 9/2*0.0254;     % [m]
 

@@ -22,9 +22,10 @@ function [ Mz, vect ] = cvxGripMz( A, fx, fy, constraints, objective )
 
         subject to
 
-            x<=constraints
+            x <= constraints
 
-            x>=[0; 0; 0; 0]
+            x >= [0; 0; 0; 0]
+           
             [fx fy mz]' ==  A * x
 
     cvx_end
