@@ -87,8 +87,9 @@ A = [zeros(3) eye(3); zeros(3) zeros(3)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Set Initial velocity with q0 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-q0 = [0 -r 0 .3 -1 4*pi]';  % <--- Remember last thre quantities are velocities
+%q0 = [0 -r 0 .3 -1 4*pi]';  % <--- Remember last thre quantities are velocities
                             % setting y0 = -r makes yTarB_0 = 0; 
+ q0 = [0 -r 0 .5 -0.5 .3]'                           
 u0 = [0 0 0]';
 
 
@@ -172,7 +173,7 @@ for ii = 1:n
     elseif strcmp(PASSIVE_OR_ACTIVE,'PASSIVE')
         
         % CALCULATE FORCES FOR PASSIVE GRIPPER HERE 
-        u = [1 1 1]'; 
+        u = [1 1 .1]'; 
     end
     
     % Euler Method Integration actually happens here 

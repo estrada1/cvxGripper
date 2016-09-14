@@ -6,25 +6,25 @@
 % Matt coded up active control, hao is doing passive
 close all; clear all; clc; 
 
-%PASSIVE_OR_ACTIVE = 'PASSIVE';
-PASSIVE_OR_ACTIVE = 'ACTIVE';
+PASSIVE_OR_ACTIVE = 'PASSIVE';
+%PASSIVE_OR_ACTIVE = 'ACTIVE';
 
 
 %% Set up Constants
 % Useful paths for convex optimization code
-    addpath('functionsCvx','functionsHelper','dataGenerated')
+    %addpath('functionsCvx','functionsHelper','dataGenerated') 
     trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
 
 % Define Geometry of the gripper
     %These numbers are mainly useful for convex optimization 
-    alphad = 11.35;         % [deg]
-    r = 9/2*0.0254;         % [m]
-    Acm = defineGeometry(alphad,r); 
-    Awrist = trans(r)*Acm; 
-    A = Awrist; 
-    maxAdhesion1 =  24;
-    maxAdhesion2 = 19.28;
-    constraints = [maxAdhesion1; maxAdhesion2; 100; 100];
+%     alphad = 11.35;         % [deg]
+%     r = 9/2*0.0254;         % [m]
+%     Acm = defineGeometry(alphad,r); 
+%     Awrist = trans(r)*Acm; 
+%     A = Awrist; 
+%     maxAdhesion1 =  24;
+%     maxAdhesion2 = 19.28;
+%     constraints = [maxAdhesion1; maxAdhesion2; 100; 100];
 
 
 % Rigid Body parameters 
@@ -32,6 +32,17 @@ PASSIVE_OR_ACTIVE = 'ACTIVE';
     mTar                            =  1.5526;                 % kg                  Constant
     r                               =  0.1143;                 % m                   Constant
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+% Passive wrist stiffness
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    kx = 250;   % 250N/m
+    ky = 250;   % 250N/m
+    kz = 0.125; % 0.125Nm
+    
+    % fake numbers for damping
+    bx = 1;
+    by = 1;
+    bz = 0.1;
 
 
 %% Define EOM
@@ -87,7 +98,7 @@ A = [zeros(3) eye(3); zeros(3) zeros(3)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Set Initial velocity with q0 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-q0 = [0 -r 0 .3 -1 4*pi]';  % <--- Remember last thre quantities are velocities
+q0 = [0 -r 0 .5 -.5 .3]';  % <--- Remember last thre quantities are velocities
                             % setting y0 = -r makes yTarB_0 = 0; 
 u0 = [0 0 0]';
 
@@ -100,7 +111,10 @@ q = q0; u = u0;
 
 % Give intuitive names to some quantities 
 % Paul uses notation xp = x' = vx 
-theta = q(3); xp = q(4); yp = q(5); thetap = q(6); 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Added x and y
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+x = q(1); y = q(2); theta = q(3); xp = q(4); yp = q(5); thetap = q(6); 
 minP = 0; 
     
 % Useful to track the velocity of point TarB in reference frame Tar , dubbed qpTarB
@@ -114,8 +128,8 @@ qpTarB = [xpTarB_RefT; ypTarB_RefT; q(6)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Position and Velocity of TarB in reference frame N 
 % The gripper is attached to rigid body Tar at TarB 
-xTarB_N = q(1) - r*sin(theta);
-yTarB_N = q(2) + r*cos(theta);
+xTarB_N = x - r*sin(theta);
+yTarB_N = y + r*cos(theta);
 xpTarB_N = xp - r*cos(theta)*thetap;
 ypTarB_N = yp - r*sin(theta)*thetap;
 
@@ -144,7 +158,10 @@ for ii = 1:n
     end
     
     % Give easy names
-    theta = q(3); xp = q(4); yp = q(5); thetap = q(6); 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Added x and y
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    x = q(1); y = q(2); theta = q(3); xp = q(4); yp = q(5); thetap = q(6); 
     
     % Calc B Matrix (changes with orientation 
     thisM = M(theta); % <-- code above should correspond to whether M is for active or passive forces
@@ -155,6 +172,13 @@ for ii = 1:n
     ypTarB_RefT = cos(theta)*yp - sin(theta)*xp;
     KineticEnergy = 0.5*ITarzz*thetap^2 + 0.5*mTar*(xp^2+yp^2);
     qpTarB = [xpTarB_RefT; ypTarB_RefT; q(6)];
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Updated x and y
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    xTarB_N = x - r*sin(theta);
+    yTarB_N = y + r*cos(theta);
+    xpTarB_N = xp - r*cos(theta)*thetap;
+    ypTarB_N = yp - r*sin(theta)*thetap;
 
     if strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
 
@@ -172,7 +196,13 @@ for ii = 1:n
     elseif strcmp(PASSIVE_OR_ACTIVE,'PASSIVE')
         
         % CALCULATE FORCES FOR PASSIVE GRIPPER HERE 
-        u = [1 1 1]'; 
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Calculated u
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        fx = xTarB_N * kx + xpTarB_N * bx;
+        fy = yTarB_N * ky + ypTarB_N * by;
+        mz = theta * kz + thetap * bz;
+        u = -[fx fy mz]'; 
     end
     
     % Euler Method Integration actually happens here 
@@ -225,28 +255,15 @@ legend('vxTar','vyTar','v \theta Tar')
 %% Force Space
 figure
 
-load('3DscatterLimit_AsymmetricPaper_Sept8')
-limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
-limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
-limitWrist = (trans(r)*limit')';
-limitWrist=limit;
-
-figure; set(gca,'fontsize',20); hold on;
-plotManualIsolines(limitWrist,limitWrist(:,2))
-axis tight
-
-plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
-plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
-
-
-%%
-figure
-
-set(gca,'fontsize',20); hold on;
-plotManualIsolines(limitWrist,limitWrist(:,2))
-axis tight
+% load('3DscatterLimit_AsymmetricPaper_Sept8')
+% limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
+% limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
+% limitWrist = (trans(r)*limit')';
+% limitWrist=limit;
+% 
+% figure; set(gca,'fontsize',20); hold on;
+% plotManualIsolines(limitWrist,limitWrist(:,2))
+% axis tight
 
 plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
 plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
-
-

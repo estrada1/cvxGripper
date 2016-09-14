@@ -25,7 +25,7 @@ axis tight
 figure;
 subplot(2,1,1)
 set(gca,'fontsize',16); hold on;
-plotManualIsolines(limitWrist,limitWrist(:,2))
+plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
 axis tight
 subplot(2,1,2)
 set(gca,'fontsize',16); hold on;
