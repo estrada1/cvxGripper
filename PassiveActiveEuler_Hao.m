@@ -151,11 +151,11 @@ for ii = 1:n
     % Break loop if object has slowed down 
     % May want to remove this for passive gripper, since energy is still
     % stored in springs 
-    if KineticEnergy < 0.05
-        Q = Q(:,1:length(K));
-        t = t(1:length(K)); 
-        break
-    end
+%     if KineticEnergy < 0.05
+%         Q = Q(:,1:length(K));
+%         t = t(1:length(K)); 
+%         break
+%     end
     
     % Give easy names
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,15 +255,15 @@ legend('vxTar','vyTar','v \theta Tar')
 %% Force Space
 figure
 
-% load('3DscatterLimit_AsymmetricPaper_Sept8')
-% limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
-% limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
-% limitWrist = (trans(r)*limit')';
-% limitWrist=limit;
-% 
-% figure; set(gca,'fontsize',20); hold on;
-% plotManualIsolines(limitWrist,limitWrist(:,2))
-% axis tight
+load('3DscatterLimit_AsymmetricPaper_Sept8')
+limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
+limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
+limitWrist = (trans(r)*limit')';
+limitWrist=limit;
+
+figure; set(gca,'fontsize',20); hold on;
+plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
+axis tight
 
 plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
 plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)

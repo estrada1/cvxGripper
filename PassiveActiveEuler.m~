@@ -16,15 +16,13 @@ close all; clear all; clc;
     r                               =  0.1143;                 % m                   Constant
     trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
     
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+% Set up Simulation and Initial 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set up Simulation and Initial Conditions here 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-%PASSIVE_OR_ACTIVE = 'PASSIVE';
-PASSIVE_OR_ACTIVE = 'ACTIVE';
-%q0 = [0 -r 0 .25 -0.25 .3]' % Set initial velocity with q0
-q0 = [0 -r 0 -.25 -0.25 2*pi]'
+PASSIVE_OR_ACTIVE = 'PASSIVE';
+%PASSIVE_OR_ACTIVE = 'ACTIVE';
+q0 = [0 -r 0 .25 -0.25 .3]' % Set initial velocity with q0
     
 if strcmp(PASSIVE_OR_ACTIVE,'PASSIVE')
 
@@ -34,11 +32,11 @@ if strcmp(PASSIVE_OR_ACTIVE,'PASSIVE')
     kx = 250;   % 250N/m
     ky = 250;   % 250N/m
     %kz = 0.125; % 0.125Nm
-    kz = 0.125;
+    kz = 0.0525;
     % fake numbers for damping
-    bx = 2;
-    by = 2;
-    bz = 0.002;
+    bx = 1;
+    by = 1;
+    bz = 0.1;
     
     elseif strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
         % Useful paths for convex optimization code
@@ -143,11 +141,8 @@ t = (0:n-1)*dt;
 
 % Loop for simulation 
 for ii = 1:n
-    str = sprintf('t: %d \t K: %d',ii*dt,KineticEnergy);
-    disp(str)
-
-    %disp(['t: ' num2str(ii*dt) ',' '\t' 'K: ' num2str(KineticEnergy)])
-     % Print out K so that we can tell the object is slowing down
+    
+    KineticEnergy % Print out K so that we can tell the object is slowing down
     
     % Store useful quantities in a big matrix
     Q(:,ii) = q;
@@ -155,17 +150,15 @@ for ii = 1:n
     U(:,ii) = u; 
     K(:,ii) = KineticEnergy;    
     Pcalc(:,ii) = minP;
-    
-    if strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
-        %Break loop if object has slowed down 
-        %May want to remove this for passive gripper, since energy is still
-        %stored in springs 
-        if KineticEnergy < 0.02
-            Q = Q(:,1:length(K));
-            t = t(1:length(K)); 
-            break
-        end
-    end
+ 
+    % Break loop if object has slowed down 
+    % May want to remove this for passive gripper, since energy is still
+    % stored in springs 
+%     if KineticEnergy < 0.05
+%         Q = Q(:,1:length(K));
+%         t = t(1:length(K)); 
+%         break
+%     end
     
     % Give easy names
     % Give easy names
@@ -286,18 +279,13 @@ plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on;
 plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
 
 
-%% MEGA FIGURE 
-figure;
-
-subplot(4,1,1); set(gca,'fontsize',16); hold on;
-[hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:))     
-    % plotyy not recommended anymore, new function, 'yyaxis left/right' with
-	% Matlab 2016B (I'm on 2014B at the moment)
-legend('F_x','F_y','M_z')
-title('Force Applied at the gripper contact point')
+%%
+figure
+subplot(4,1,1)
+set(gca,'fontsize',14); hold on;
+plot(t,U(1,:),t, U(2,:), t, U(3,:))
 xlabel('time [sec]')
-ylabel(hAx(1),'Force [N]')
-ylabel(hAx(2),'Moment [Nm]','fontsize',16)
+legend('Fx','Fy','Mz')
 
 subplot(4,1,2)
 set(gca,'fontsize',14); hold on;
