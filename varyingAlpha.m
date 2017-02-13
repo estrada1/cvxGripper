@@ -36,7 +36,7 @@ plot(limit20(:,1),limit20(:,3),'-','LineWidth',4)
 
 %title('Varying \alpha (assuming F_y = 0)')
 xlabel('F_x [N]')
-ylabel('T_z [Nm]')
+ylabel('M_z [Nm]')
 legend('\alpha = 65 [deg]', '\alpha = 50 [deg]', '\alpha = 20 [deg]')
 
 fig = gcf;

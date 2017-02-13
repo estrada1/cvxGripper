@@ -12,11 +12,12 @@ trans = @(r) [1 0 0; 0 1 0; r 0 1];
 
 % Load in simulated limit surface
 %load('dataGenerated/3DscatterLimit_AsymmetricPaper_Sept8') % limit variable represents as accelerations about object's COM
-load('3DscatterLimit_Adhesive20_Sept13')
+%load('3DscatterLimit_Adhesive20_Sept13')
+load('3DscatterLimit_Roshena_Oct18')
 limit(isinf(limit(:,3)),:) = [];% Get rid of erraneous vals
 limit(isnan(limit(:,3)),:) = [];% Get rid of erraneous vals
-%limitWrist = (trans(r)*limit')';
-limitWrist=limit;
+limitWrist = (trans(parameters.r)*limit')';
+%limitWrist=limit;
 
 figure; set(gca,'fontsize',20); hold on;
 plotManualIsolines(limitWrist,limitWrist(:,2))

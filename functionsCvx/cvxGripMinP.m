@@ -20,7 +20,7 @@ function [ minP, Fnet, tensions, components ] = cvxGripMinP( A, constraints, v)
 
             x<=constraints
             
-            %fy>=0
+            fy>=0
 
             x>=[0; 0; 0; 0]
             

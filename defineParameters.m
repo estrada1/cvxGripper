@@ -20,19 +20,33 @@ trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
 % maxAdhesion = max([maxAdhesion1 maxAdhesion2]); 
 % constraints = [maxAdhesion1; maxAdhesion2; 1000000; 1000000];
 
-%% Generic Numbers
+% %% Generic Numbers
+% % Define Geometry 
+% alphad = 20;      % [deg]
+% r = 0.1;     % [m]
+% Acm = defineGeometry(alphad,r);
+% Awrist = trans(r)*Acm; 
+% 
+% % Define Adhesion 
+% maxAdhesion1 =  20;
+% maxAdhesion2 = 20;
+% maxAdhesion = max([maxAdhesion1 maxAdhesion2]); 
+% constraints = [maxAdhesion1; maxAdhesion2; 1000000; 1000000];
+
+%% Roshena Numbers
 % Define Geometry 
-alphad = 20;      % [deg]
-r = 0.1;     % [m]
+alphad = 15;      % [deg]
+r = 1.2;     % [m]
 Acm = defineGeometry(alphad,r);
 Awrist = trans(r)*Acm; 
 
 % Define Adhesion 
-maxAdhesion1 =  20;
-maxAdhesion2 = 20;
+maxAdhesion1 =  60;
+maxAdhesion2 = 60;
 maxAdhesion = max([maxAdhesion1 maxAdhesion2]); 
 constraints = [maxAdhesion1; maxAdhesion2; 1000000; 1000000];
 
 
-
 parameters = struct('alphad',alphad,'r',r,'Acm',Acm, 'constraints',constraints);
+
+

@@ -7,7 +7,7 @@
 %% Set up parameters 
 
 close all; clear; clc; 
-dataName = 'dataGenerated/3DscatterLimit_Adhesive20_Sept13'; 
+dataName = 'dataGenerated/3DscatterLimit_Roshena_Oct18'; 
 
 % Define geometry and adhesion capabilities 
 defineParameters; % A, alpha, maxAdhesion 
