@@ -1,6 +1,7 @@
-function [Q,U,K,QTarB,t,limitWrist] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile)
-
 %% PassiveActiveEuler.m
+
+% LAST USED FEB 16 2017, I'M TURNING THIS INTO A FUNCTION NOW
+
 % Author: Matt Estrada, Hao Jiang
 % Date: Sept 12, 2016
 % Simulation of an active gripper vs. a Passive Gripper. 
@@ -14,26 +15,40 @@ function [Q,U,K,QTarB,t,limitWrist] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIV
 % RigidBody       Tar              % Technical name of body
 % Point           TarB( Tar )      % Point of applied gripper forces
 
+close all; clear; clc; 
 
 %% Set up Constants
 % Rigid Body parameters 
-ITarzz = Tar.ITarzz;
-mTar = Tar.mTar;
-r = Tar.r;
-trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
+    ITarzz                          =  0.0128;                 % kg*m^2              Constant
+    mTar                            =  1.5526;                 % kg                  Constant
+    r                               =  0.1143;                 % m                   Constant
+    trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
+    addpath('functionsCvx','functionsHelper','dataGenerated')
 
-addpath('functionsCvx','functionsHelper','dataGenerated')
-warning('off','MATLAB:nargchk:deprecated')
     
 %% Control Inputs here     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set up Simulation and Initial Conditions here 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+PASSIVE_OR_ACTIVE = 'PASSIVE';
+%PASSIVE_OR_ACTIVE = 'ACTIVE';
+%PASSIVE_OR_ACTIVE = 'ONE_DOF' 
+
+%q0 = [0 -r 0 .25 -0.25 .3]' % Set initial velocity with q0
+%q0 = [0 -r 0 -0.25 -0.25 2*pi]' %< --- Good comparison , sort of quick-stop
+q0 = [0 -r 0 0 -0.2 2*pi]' %< --- Good comparison, used in paper submission
+%q0 = [0 -r 0 0 -0.2 3*pi]' %< --- Good comparison, used in paper draft
+
+%q0 = [0 -r 0 .3 -1 4*pi]'; <--- Good settings for aggressive active control
+trialName = 'NeginAdapt_Oct10_MoreAngularMomentum'; 
+limitsurfaceFile = '3DscatterLimit_AsymmetricPaper_Sept8';
+showplots = 1; 
+    
 %% Setting up More Constants 
 
 % Limit Surface to Plot
-load(limitsurfaceFile)
+load('3DscatterLimit_AsymmetricPaper_Sept8')
 limit(isinf(limit(:,3)),:) = [];    % Get rid of erraneous vals
 limit(isnan(limit(:,3)),:) = [];    % Get rid of erraneous vals
 %limitWrist = (trans(r)*limit')';
@@ -54,37 +69,10 @@ switch  PASSIVE_OR_ACTIVE
         bx = 2;
         by = 2;
         bz = 0.002;
-        
-        ITarzz_ContactPt = (ITarzz+mTar*r^2); 
-
-        wnx = sqrt(kx/mTar) ;
-        zetax = bx/(2*sqrt(mTar*kx));
-        
-        wnz = sqrt(kz/ITarzz_ContactPt);
-        zetaz = bz/(2*sqrt(ITarzz_ContactPt*kz));
-        
         % critically damped
         bx = 2*sqrt(mTar*kx);
         by = 2*sqrt(mTar*ky);
-        %bz = 2*sqrt((ITarzz)*kz);
-        bz = 2*sqrt((ITarzz+mTar*r^2)*kz);
-        
-        %% Trying with natural freq and damping ratio
-        wn = 12; 
-        zeta = .4; 
-        wnz = wn/6;
-        zetaz = zeta/3; 
-
-        
-        kx = wn^2*mTar;
-        ky = wn^2*mTar; 
-        kz = wnz^2*ITarzz_ContactPt;
-        
-        bx = 2*zeta*sqrt(mTar*kx); 
-        by = 2*zeta*sqrt(mTar*ky); 
-        bz = 2*zetaz*sqrt(ITarzz_ContactPt*kz); 
-        
-        
+        bz = 2*sqrt(ITarzz*kz);
     
     case 'ACTIVE'
         % Useful paths for convex optimization code
@@ -103,7 +91,7 @@ switch  PASSIVE_OR_ACTIVE
         
         % Linear Interpolation of Limit Surface
         %fit_polar = fitSurface_polar(limitWrist,'linearinterp') % Fitting surface w/ linear interpolation 
-        fit_polar = fitSurface_polar((trans(-r)*limitWrist')','linearinterp'); % Fitting surface w/ linear interpolation 
+        fit_polar = fitSurface_polar((trans(-r)*limitWrist')','linearinterp') % Fitting surface w/ linear interpolation 
 
         figure; 
         plot3(limitWrist(:,1),limitWrist(:,2),limitWrist(:,3),'*'); hold on; 
@@ -190,7 +178,7 @@ A = [zeros(3) eye(3); zeros(3) zeros(3)];
                           
 u0 = [0 0 0]';
 
-n = 2000;   % Number of time steps to step through 
+n = 1000;   % Number of time steps to step through 
 dt = .0005;  % Step size
 
 % Initial conditions
@@ -340,106 +328,106 @@ timenow = char(datetime('now','Format','dd-MMM-yyyy HH-mm-ss'));
 save(['dataGenerated/' PASSIVE_OR_ACTIVE ' ' trialName ' ' timenow ])
 
 %% Plotting 
-% 
-% if(showplots)
-%     % Position, Velocity, Acceleration
-%     figure; set(gca,'fontsize',16); hold on;
-%     Q;
-%     dQ = diff(Q,1,2);
-%     dK = diff(K)/dt; 
-%     px =  QTarB(1,:).*U(1,:); % Power into system joint x
-%     py =  QTarB(2,:).*U(2,:); % joint y
-%     pz =  QTarB(3,:).*U(3,:); % joint z 
-% 
-%     %%%%%%%% States
-%     subplot(3,1,1); set(gca,'fontsize',16); hold on;
-%     plot(t,Q(1,:),t, Q(2,:),t,Q(3,:))
-%     legend('x','y','theta')
-%     title('Position')
-%     subplot(3,1,2); set(gca,'fontsize',16); hold on;
-%     plot(t,Q(4,:),t, Q(5,:), t, Q(6,:))
-%     legend('vx','vy','vtheta')
-%     title('Velocity')
-%     subplot(3,1,3); set(gca,'fontsize',16); hold on;
-%     plot(t(1:end-1),dQ(4,:),t(1:end-1),dQ(5,:),t(1:end-1),dQ(6,:))
-%     legend('ax','ay','\alpha')
-%     title('Acceleration')
-% 
-%     %%%%%%%% Kinetic Energy and Power 
-%     figure; 
-%     subplot(2,1,1); set(gca,'fontsize',16); hold on;
-%     plot(t,K)
-%     ylabel('Kinetic Energy [J]')
-%     subplot(2,1,2); set(gca,'fontsize',16); hold on;
-%     plot(t(1:end-1),dK,t,px,'--',t,py,'--',t,pz,'--')
-%     ylabel('Power [W]')
-%     xlabel('Time [sec]')
-%     legend('Total','JointX','JointY','JointZ')
-% 
-%     %%%%%%%% Forces Applied
-%     figure; set(gca,'fontsize',16); hold on;
-%     [hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:))     
-%         % plotyy not recommended anymore, new function, 'yyaxis left/right' with
-%         % Matlab 2016B (I'm on 2014B at the moment)
-%     legend('F_x','F_y','M_z')
-%     title('Force Applied at the gripper contact point')
-%     xlabel('time [sec]')
-%     ylabel(hAx(1),'Force [N]')
-%     ylabel(hAx(2),'Moment [Nm]','fontsize',16)
-% 
-%     figure; set(gca,'fontsize',16); hold on;
-%     plot(t,QTarB(1,:),t, QTarB(2,:), t, QTarB(3,:))
-%     title('Velocity of point')
-%     legend('vxTar','vyTar','v \theta Tar')
-%     xlabel('time [sec]')
-%     ylabel('velocity [m/s]')
-% 
-% 
-%     %%%%%%%% Force Space
-%     figure; set(gca,'fontsize',20); hold on;
-%     %plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
-%         plotManualIsolines(limitWrist,limitWrist(:,2))
-% 
-%     axis tight
-%     plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
-%     plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
-%     % plot3(U(1,:), zeros(size(U(3,:))), U(2,:),'g.','MarkerSize',10) % Passive Project for 1 DOF actuation 
-% 
-%     %%%%%%%% MEGA FIGURE 
-%     figure;
-%     subplot(4,1,1); set(gca,'fontsize',16); hold on;
-%     [hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:));     
-%         % plotyy not recommended anymore, new function, 'yyaxis left/right' with
-%         % Matlab 2016B (I'm on 2014B at the moment)
-%         
-%     legend('F_x','F_y','M_z')
-%     title('Force Applied at the gripper contact point')
-%     xlabel('time [sec]')
-%     ylabel(hAx(1),'Force [N]')
-%     ylabel(hAx(2),'Moment [Nm]','fontsize',16)
-% 
-%     subplot(4,1,2)
-%     set(gca,'fontsize',14); hold on;
-%     plot(t,K)
-%     xlabel('time [sec]')
-%     legend('Kinetic Energy')
-% 
-%     subplot(4,1,3:4)
-%     set(gca,'fontsize',14); hold on;
-%     plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
-%     %plotManualIsolines(limitWrist,limitWrist(:,2))
-%     axis tight
-%     plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
-%     plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
-% 
-% 
-%     % % Save Mega Figure
-%     % 
-%     % fig = gcf;
-%     % fig.PaperPositionMode = 'auto'
-%     % fig_pos = fig.PaperPosition;
-%     % fig.PaperSize = [fig_pos(3) fig_pos(4)];
-%     % 
-%     % addpath('functionsCvx','functionsHelper','dataGenerated')
-%     % print(fig,'ActiveGrasp','-dpdf')
-% end
+
+if(showplots)
+    % Position, Velocity, Acceleration
+    figure; set(gca,'fontsize',16); hold on;
+    Q;
+    dQ = diff(Q,1,2);
+    dK = diff(K)/dt; 
+    px =  QTarB(1,:).*U(1,:); % Power into system joint x
+    py =  QTarB(2,:).*U(2,:); % joint y
+    pz =  QTarB(3,:).*U(3,:); % joint z 
+
+    %%%%%%%% States
+    subplot(3,1,1); set(gca,'fontsize',16); hold on;
+    plot(t,Q(1,:),t, Q(2,:),t,Q(3,:))
+    legend('x','y','theta')
+    title('Position')
+    subplot(3,1,2); set(gca,'fontsize',16); hold on;
+    plot(t,Q(4,:),t, Q(5,:), t, Q(6,:))
+    legend('vx','vy','vtheta')
+    title('Velocity')
+    subplot(3,1,3); set(gca,'fontsize',16); hold on;
+    plot(t(1:end-1),dQ(4,:),t(1:end-1),dQ(5,:),t(1:end-1),dQ(6,:))
+    legend('ax','ay','\alpha')
+    title('Acceleration')
+
+    %%%%%%%% Kinetic Energy and Power 
+    figure; 
+    subplot(2,1,1); set(gca,'fontsize',16); hold on;
+    plot(t,K)
+    ylabel('Kinetic Energy [J]')
+    subplot(2,1,2); set(gca,'fontsize',16); hold on;
+    plot(t(1:end-1),dK,t,px,'--',t,py,'--',t,pz,'--')
+    ylabel('Power [W]')
+    xlabel('Time [sec]')
+    legend('Total','JointX','JointY','JointZ')
+
+    %%%%%%%% Forces Applied
+    figure; set(gca,'fontsize',16); hold on;
+    [hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:))     
+        % plotyy not recommended anymore, new function, 'yyaxis left/right' with
+        % Matlab 2016B (I'm on 2014B at the moment)
+    legend('F_x','F_y','M_z')
+    title('Force Applied at the gripper contact point')
+    xlabel('time [sec]')
+    ylabel(hAx(1),'Force [N]')
+    ylabel(hAx(2),'Moment [Nm]','fontsize',16)
+
+    figure; set(gca,'fontsize',16); hold on;
+    plot(t,QTarB(1,:),t, QTarB(2,:), t, QTarB(3,:))
+    title('Velocity of point')
+    legend('vxTar','vyTar','v \theta Tar')
+    xlabel('time [sec]')
+    ylabel('velocity [m/s]')
+
+
+    %%%%%%%% Force Space
+    figure; set(gca,'fontsize',20); hold on;
+    %plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
+        plotManualIsolines(limitWrist,limitWrist(:,2))
+
+    axis tight
+    plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
+    plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
+    % plot3(U(1,:), zeros(size(U(3,:))), U(2,:),'g.','MarkerSize',10) % Passive Project for 1 DOF actuation 
+
+    %%%%%%%% MEGA FIGURE 
+    figure;
+    subplot(4,1,1); set(gca,'fontsize',16); hold on;
+    [hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:));     
+        % plotyy not recommended anymore, new function, 'yyaxis left/right' with
+        % Matlab 2016B (I'm on 2014B at the moment)
+        
+    legend('F_x','F_y','M_z')
+    title('Force Applied at the gripper contact point')
+    xlabel('time [sec]')
+    ylabel(hAx(1),'Force [N]')
+    ylabel(hAx(2),'Moment [Nm]','fontsize',16)
+
+    subplot(4,1,2)
+    set(gca,'fontsize',14); hold on;
+    plot(t,K)
+    xlabel('time [sec]')
+    legend('Kinetic Energy')
+
+    subplot(4,1,3:4)
+    set(gca,'fontsize',14); hold on;
+    plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
+    %plotManualIsolines(limitWrist,limitWrist(:,2))
+    axis tight
+    plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
+    plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
+
+
+    % % Save Mega Figure
+    % 
+    % fig = gcf;
+    % fig.PaperPositionMode = 'auto'
+    % fig_pos = fig.PaperPosition;
+    % fig.PaperSize = [fig_pos(3) fig_pos(4)];
+    % 
+    % addpath('functionsCvx','functionsHelper','dataGenerated')
+    % print(fig,'ActiveGrasp','-dpdf')
+end

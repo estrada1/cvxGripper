@@ -14,7 +14,7 @@ function plotManualIsolines(data,grouping,mode)
     
     % Plot on isoline "levels" 
     levels = unique(grouping);
-    nLevels = numel(levels)
+    nLevels = numel(levels);
     
     % Gradually fade colors to indicate Fy value
     endColor = [165, 3, 12]/255; 

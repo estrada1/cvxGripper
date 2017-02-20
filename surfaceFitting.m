@@ -23,22 +23,42 @@ figure; set(gca,'fontsize',20); hold on;
 axis tight
 
 x = limitWrist(:,1);
-z = limitWrist(:,2);  % Note I switch y and z here 
-y = limitWrist(:,3);
+y = limitWrist(:,2);  % Note I switch y and z here 
+z = limitWrist(:,3);
 
 [azimuth,elevation,r] = cart2sph(x,y,z);
 
 fit_polar = fitSurface_polar(limitWrist,'linearinterp'); % Fitting surface w/ linear interpolation 
 mag = solveSurface_polar(fit_polar,[x, y, z]);
- sfx = x.*mag; 
- sfy = y.*mag;
- sfz = z.*mag; 
+%  sfx = x.*mag; 
+%  sfy = y.*mag;
+%  sfz = z.*mag; 
 [sfx, sfy, sfz] = sph2cart(azimuth, elevation,mag);
 
-plot3(x,y,sfz,'d') 
+test1 = [0 0 1;...
+        0 1 0;...
+        1 0 0;...
+        0 0 1;];
+        %0 8 0];
+[mag1, comp1] = solveSurface_polar(fit_polar,test1)
+
+theta = 0:.01:pi;
+
+test2 = [zeros(length(theta),1) , sin(theta)', cos(theta)'];
+[mag2, comp2] = solveSurface_polar(fit_polar,test2)
+
+plot3(sfx,sfy,sfz,'d') 
 hold on
 plot3(x,y,z,'*')
+%plot3(test1(:,1),test1(:,2),test1(:,3),'s','MarkerSize',8);
+plot3(comp1(1,:),comp1(2,:),comp1(3,:),'gs','MarkerSize',15);
+plot3(comp2(1,:),comp2(2,:),comp2(3,:),'ks','MarkerSize',15);
+
+plotManualIsolines(limitWrist,limitWrist(:,2));
 hold off
+
+
+
 
 % %% Fitting
 % x = limitWrist(:,1);

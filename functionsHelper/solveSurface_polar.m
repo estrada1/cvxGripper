@@ -1,4 +1,4 @@
-function magnitude = solveSurface_polar(fit_polar, forces)
+function [magnitude, components] = solveSurface_polar(fit_polar, forces)
 % Matt Estrada
 % February 1, 2017 
 % Transform the curved gripper limit surface into polar coordinates so that
@@ -10,6 +10,7 @@ z = forces(:,3);
 
 [azimuth,elevation,r] = cart2sph(x,y,z);
 magnitude = fit_polar([azimuth, elevation]);
-
+[compx, compy compz] = sph2cart(azimuth,elevation,magnitude);
+components = [compx, compy, compz]';
 
 end
