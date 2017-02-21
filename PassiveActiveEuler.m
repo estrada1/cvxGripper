@@ -1,4 +1,4 @@
-function [Q,U,K,QTarB,t,limitWrist] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile)
+function [Q,U,K,QTarB,t,limitWrist,success] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile,printouts)
 
 %% PassiveActiveEuler.m
 % Author: Matt Estrada, Hao Jiang
@@ -21,6 +21,8 @@ ITarzz = Tar.ITarzz;
 mTar = Tar.mTar;
 r = Tar.r;
 trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
+
+success = 2; % Weird case, this shouldn't happen
 
 addpath('functionsCvx','functionsHelper','dataGenerated')
 warning('off','MATLAB:nargchk:deprecated')
@@ -72,9 +74,11 @@ switch  PASSIVE_OR_ACTIVE
         %% Trying with natural freq and damping ratio
         wn = 12; 
         zeta = .4; 
-        wnz = wn/6;
-        zetaz = zeta/3; 
+%         wnz = wn/6;
+%         zetaz = zeta/3; 
 
+        wnz = wn/6;
+        zetaz = zeta/3;         
         
         kx = wn^2*mTar;
         ky = wn^2*mTar; 
@@ -87,6 +91,7 @@ switch  PASSIVE_OR_ACTIVE
         
     
     case 'ACTIVE'
+        disp('Active Simulation')
         % Useful paths for convex optimization code
         trans = @(rd) [1 0 0; 0 1 0; rd 0 1];
 
@@ -190,7 +195,7 @@ A = [zeros(3) eye(3); zeros(3) zeros(3)];
                           
 u0 = [0 0 0]';
 
-n = 2000;   % Number of time steps to step through 
+n = 50000;   % Number of time steps to step through 
 dt = .0005;  % Step size
 
 % Initial conditions
@@ -220,8 +225,11 @@ t = (0:n-1)*dt;
 
 % Loop for simulation 
 for ii = 1:n
-    str = sprintf('t: %d \t K: %d',ii*dt,KineticEnergy);
-    disp(str)
+    
+    if(printouts)
+        str = sprintf('t: %d \t K: %d',ii*dt,KineticEnergy);
+        disp(str)
+    end
     
     % Store useful quantities in a big matrix (capital letters)
     Q(:,ii) = q;
@@ -230,16 +238,21 @@ for ii = 1:n
     K(:,ii) = KineticEnergy;    
     Pcalc(:,ii) = minP;
     
-    if strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
-        %Break loop if object has slowed down 
-        %May want to remove this for passive gripper, since energy is still
-        %stored in springs 
-        if KineticEnergy < 0.0001
+    
+    if KineticEnergy < 0.0001
+        if strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
             Q = Q(:,1:length(K));
             t = t(1:length(K)); 
+            success = 1; 
+            break
+        elseif(norm(u)<.01)
+            Q = Q(:,1:length(K));
+            t = t(1:length(K)); 
+            success = 1; 
             break
         end
     end
+
     
     % Give easy names
     x = q(1); y = q(2); theta = q(3); xp = q(4); yp = q(5); thetap = q(6); 
@@ -257,7 +270,7 @@ for ii = 1:n
     yTarB_N = y + r*cos(theta);
     xpTarB_N = xp - r*cos(theta)*thetap;
     ypTarB_N = yp - r*sin(theta)*thetap;
-
+    
     % Calculate Applied Force (from wrist)
     
     switch PASSIVE_OR_ACTIVE
@@ -271,26 +284,42 @@ for ii = 1:n
 %                  u = Fnet;
 
             R_TN = [cos(theta), sin(theta), 0;  -sin(theta), cos(theta), 0;  0, 0, 1]; % Rotation matrix from frame N to frame Tar 
+            massMatrix = [mTar 0 0; 0 mTar 0; 0 0 ITarzz]; 
+            massMatrix_Wrist = [mTar 0 0; 0 mTar 0; 0 0 (ITarzz+mTar*r^2)];
             
-            CONTROL_LAW = 'MOMENTUM';
+            CONTROL_LAW = 'MOMENTUM_WRIST';
             switch CONTROL_LAW
                 case 'MOMENTUM'
                 % Oppose Momentum Control Law
                     massMatrix = [mTar 0 0; 0 mTar 0; 0 0 ITarzz]; 
                     [ beta, unit_vect, components ] = cvxGripBeta( Acm, -massMatrix*R_TN*q(4:6), constraints);
-                
+                    u = trans(r)*components; 
+
+                case 'MOMENTUM_WRIST'
+                % Oppose Momentum Control Law
+                    [ beta, unit_vect, components ] = cvxGripBeta( Awrist, -massMatrix_Wrist*qpTarB, constraints);
+                    u = components; 
+
                 case 'DAMPING'
                 % Damping Control Law
                     [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_TN*q(4:6), constraints);
-               
+                    u = trans(r)*components; 
+                    
+                case 'DAMPING_WRIST'
+                % Damping Control Law
+                    [ beta, unit_vect, components ] = cvxGripBeta( Awrist, -qpTarB, constraints);
+                    u = components; 
+                    
                 case'RANGE_OF_MOTION'
                 % Range of Motion 
                     RangeOfMotion = [1/0.04 0 0; 0 1/.04 0; 0 0 1/1.345];
                     [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_TN*RangeOfMotion*q(4:6), constraints);
-                
+                    u = trans(r)*components; 
+
                 case 'POWER'
                     [ minP, Fnet, tensions, components ] = cvxGripMinP( Acm, constraints, R_TN*q(4:6));
 %                  u = Fnet;
+                    u = trans(r)*components; 
 
                 case 'INTERPOLATION'
                     massMatrix = [mTar 0 0; 0 mTar 0; 0 0 ITarzz]; 
@@ -298,10 +327,10 @@ for ii = 1:n
                     % [mag, components] = solveSurface_polar(fit_polar,(-[xpTarB_RefT xpTarB_RefT q(6)]')')
                     % components = mag*(-massMatrix*R_TN*q(4:6));
                     % components = trans(r)*comp; 
+                    u = trans(r)*components; 
 
     
             end
-            u = trans(r)*components; 
 
 
         case 'PASSIVE'
@@ -334,112 +363,8 @@ for ii = 1:n
     q = q + dq*dt;
 end
 
+
 %% Save Simulation Results 
 results = struct('Q',q,'U',U,'t',t,'q0',q0,'limitWrist',limitWrist);
 timenow = char(datetime('now','Format','dd-MMM-yyyy HH-mm-ss'));
 save(['dataGenerated/' PASSIVE_OR_ACTIVE ' ' trialName ' ' timenow ])
-
-%% Plotting 
-% 
-% if(showplots)
-%     % Position, Velocity, Acceleration
-%     figure; set(gca,'fontsize',16); hold on;
-%     Q;
-%     dQ = diff(Q,1,2);
-%     dK = diff(K)/dt; 
-%     px =  QTarB(1,:).*U(1,:); % Power into system joint x
-%     py =  QTarB(2,:).*U(2,:); % joint y
-%     pz =  QTarB(3,:).*U(3,:); % joint z 
-% 
-%     %%%%%%%% States
-%     subplot(3,1,1); set(gca,'fontsize',16); hold on;
-%     plot(t,Q(1,:),t, Q(2,:),t,Q(3,:))
-%     legend('x','y','theta')
-%     title('Position')
-%     subplot(3,1,2); set(gca,'fontsize',16); hold on;
-%     plot(t,Q(4,:),t, Q(5,:), t, Q(6,:))
-%     legend('vx','vy','vtheta')
-%     title('Velocity')
-%     subplot(3,1,3); set(gca,'fontsize',16); hold on;
-%     plot(t(1:end-1),dQ(4,:),t(1:end-1),dQ(5,:),t(1:end-1),dQ(6,:))
-%     legend('ax','ay','\alpha')
-%     title('Acceleration')
-% 
-%     %%%%%%%% Kinetic Energy and Power 
-%     figure; 
-%     subplot(2,1,1); set(gca,'fontsize',16); hold on;
-%     plot(t,K)
-%     ylabel('Kinetic Energy [J]')
-%     subplot(2,1,2); set(gca,'fontsize',16); hold on;
-%     plot(t(1:end-1),dK,t,px,'--',t,py,'--',t,pz,'--')
-%     ylabel('Power [W]')
-%     xlabel('Time [sec]')
-%     legend('Total','JointX','JointY','JointZ')
-% 
-%     %%%%%%%% Forces Applied
-%     figure; set(gca,'fontsize',16); hold on;
-%     [hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:))     
-%         % plotyy not recommended anymore, new function, 'yyaxis left/right' with
-%         % Matlab 2016B (I'm on 2014B at the moment)
-%     legend('F_x','F_y','M_z')
-%     title('Force Applied at the gripper contact point')
-%     xlabel('time [sec]')
-%     ylabel(hAx(1),'Force [N]')
-%     ylabel(hAx(2),'Moment [Nm]','fontsize',16)
-% 
-%     figure; set(gca,'fontsize',16); hold on;
-%     plot(t,QTarB(1,:),t, QTarB(2,:), t, QTarB(3,:))
-%     title('Velocity of point')
-%     legend('vxTar','vyTar','v \theta Tar')
-%     xlabel('time [sec]')
-%     ylabel('velocity [m/s]')
-% 
-% 
-%     %%%%%%%% Force Space
-%     figure; set(gca,'fontsize',20); hold on;
-%     %plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
-%         plotManualIsolines(limitWrist,limitWrist(:,2))
-% 
-%     axis tight
-%     plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
-%     plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
-%     % plot3(U(1,:), zeros(size(U(3,:))), U(2,:),'g.','MarkerSize',10) % Passive Project for 1 DOF actuation 
-% 
-%     %%%%%%%% MEGA FIGURE 
-%     figure;
-%     subplot(4,1,1); set(gca,'fontsize',16); hold on;
-%     [hAx,hLine1,hLine2] = plotyy(t,U(1:2,:),t,U(3,:));     
-%         % plotyy not recommended anymore, new function, 'yyaxis left/right' with
-%         % Matlab 2016B (I'm on 2014B at the moment)
-%         
-%     legend('F_x','F_y','M_z')
-%     title('Force Applied at the gripper contact point')
-%     xlabel('time [sec]')
-%     ylabel(hAx(1),'Force [N]')
-%     ylabel(hAx(2),'Moment [Nm]','fontsize',16)
-% 
-%     subplot(4,1,2)
-%     set(gca,'fontsize',14); hold on;
-%     plot(t,K)
-%     xlabel('time [sec]')
-%     legend('Kinetic Energy')
-% 
-%     subplot(4,1,3:4)
-%     set(gca,'fontsize',14); hold on;
-%     plotManualIsolines(limitWrist,limitWrist(:,2),'flipped')
-%     %plotManualIsolines(limitWrist,limitWrist(:,2))
-%     axis tight
-%     plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
-%     plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
-% 
-% 
-%     % % Save Mega Figure
-%     % 
-%     % fig = gcf;
-%     % fig.PaperPositionMode = 'auto'
-%     % fig_pos = fig.PaperPosition;
-%     % fig.PaperSize = [fig_pos(3) fig_pos(4)];
-%     % 
-%     % addpath('functionsCvx','functionsHelper','dataGenerated')
-%     % print(fig,'ActiveGrasp','-dpdf')
-% end

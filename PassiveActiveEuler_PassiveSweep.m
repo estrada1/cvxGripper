@@ -9,8 +9,8 @@ Tar.r                               =  0.1143;                 % m              
 
 %% Passive or Active gripper 
 % 
-%PASSIVE_OR_ACTIVE = 'PASSIVE';
-PASSIVE_OR_ACTIVE = 'ACTIVE';
+PASSIVE_OR_ACTIVE = 'PASSIVE';
+%PASSIVE_OR_ACTIVE = 'ACTIVE';
 %PASSIVE_OR_ACTIVE = 'ONE_DOF' 
 trialName = 'NeginAdapt_Oct10_MoreAngularMomentum'; 
 
@@ -25,13 +25,13 @@ q0 = [0 -r 0 0 -0.2 2*pi]' %< --- Good comparison, used in paper submission
 %q0 = [0 -r 0 .3 -1 4*pi]'; <--- Good settings for aggressive active control
 
 
-
 %% Simulation
-[Q,U,K,QTarB,t,limitWrist] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile);
-
+printouts = 0; 
+[Q,U,K,QTarB,t,limitWrist,success] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile,printouts);
 
 %% Plot
 PassiveActiveEuler_plot(Q,U,K,QTarB,t,limitWrist)
+%tfinal = find(K>.0001,1,'last')
 
 %% Calculate 
 r = Tar.r; % Distance from object COM to object surface
@@ -57,5 +57,24 @@ lm2 = limit2*ones(1,length(t));
 figure; set(gca,'fontsize',16); hold on 
 plot(t,lm1,'m--',t,lm2,'b--',t,tensions(1,:),'m',t,tensions(2,:),'b','LineWidth',2); 
 legend('limit1','limit2','adhesive1','adhesive2');
+title('Adhesive Loading');
 ylabel('Force [N]'); 
 xlabel('time [s]')
+
+% %% Sweep for settling time 
+% sweep = [1/sqrt(2) 1 sqrt(2) 2]; 
+% for kk = 1:length(sweep)
+%     mag = sweep(kk); 
+%     [Q,U,K,QTarB,t,limitWrist,success] = PassiveActiveEuler(Tar,q0*mag,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile,printouts);
+%     tfinal_PASSIVE(kk) = (t(end)); 
+%     
+%     [Q,U,K,QTarB,t,limitWrist,success] = PassiveActiveEuler(Tar,q0*mag,'ACTIVE',trialName,limitsurfaceFile,printouts);
+%     tfinal_ACTIVE(kk) = (t(end)); 
+% end
+%     %%
+%     
+% figure
+% plot(sweep.^2,tfinal_PASSIVE,'*','MarkerSize',15); hold on; 
+% plot(sweep.^2,tfinal_ACTIVE,'*','MarkerSize',15);  
+% % axis([0 length(tfinal) 0 max(tfinal)])
+
