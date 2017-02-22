@@ -1,4 +1,5 @@
-function [Q,U,K,QTarB,t,limitWrist,success] = PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,trialName,limitsurfaceFile,printouts)
+function [Q,U,K,QTarB,t,limitWrist,tensions,success] = ...
+    PassiveActiveEuler(Tar,q0,PASSIVE_OR_ACTIVE,tuning,trialName,Awrist,limits,limitsurfaceFile,printouts)
 
 %% PassiveActiveEuler.m
 % Author: Matt Estrada, Hao Jiang
@@ -72,13 +73,19 @@ switch  PASSIVE_OR_ACTIVE
         bz = 2*sqrt((ITarzz+mTar*r^2)*kz);
         
         %% Trying with natural freq and damping ratio
-        wn = 12; 
-        zeta = .4; 
+        wn = tuning(1);
+        zeta = tuning(2);
+%         wn = 12; 
+% %         wn = 5;
+%         zeta = .4;
+% %         zeta=1;  
+% 
 %         wnz = wn/6;
-%         zetaz = zeta/3; 
-
-        wnz = wn/6;
-        zetaz = zeta/3;         
+%         zetaz = zeta/3;    
+        
+        wnz = wn; 
+        zetaz = zeta; 
+        
         
         kx = wn^2*mTar;
         ky = wn^2*mTar; 
@@ -97,22 +104,22 @@ switch  PASSIVE_OR_ACTIVE
 
         % Define Geometry of the gripper
         %These numbers are mainly useful for convex optimization 
-        alphad = 11.35;         % [deg]
-        r = 9/2*0.0254;         % [m]
-        Acm = defineGeometry(alphad,r); 
-        Awrist = trans(r)*Acm; 
+%         alphad = 11.35;         % [deg]
+%         r = 9/2*0.0254;         % [m]
+%         Acm = defineGeometry(alphad,r); 
+%         Awrist = trans(r)*Acm; 
         A = Awrist; 
-        maxAdhesion1 =  24;
-        maxAdhesion2 = 19.28;
+        maxAdhesion1 =  limits(1);
+        maxAdhesion2 = limits(2);
         constraints = [maxAdhesion1; maxAdhesion2; 100; 100];
         
         % Linear Interpolation of Limit Surface
         %fit_polar = fitSurface_polar(limitWrist,'linearinterp') % Fitting surface w/ linear interpolation 
-        fit_polar = fitSurface_polar((trans(-r)*limitWrist')','linearinterp'); % Fitting surface w/ linear interpolation 
+        %fit_polar = fitSurface_polar((trans(-r)*limitWrist')','linearinterp'); % Fitting surface w/ linear interpolation 
 
-        figure; 
-        plot3(limitWrist(:,1),limitWrist(:,2),limitWrist(:,3),'*'); hold on; 
-        plotManualIsolines(limitWrist,limitWrist(:,2));
+%         figure; 
+%         plot3(limitWrist(:,1),limitWrist(:,2),limitWrist(:,3),'*'); hold on; 
+%         plotManualIsolines(limitWrist,limitWrist(:,2));
 
             
     case 'ONE_DOF'
@@ -146,9 +153,14 @@ end
 switch PASSIVE_OR_ACTIVE
     case 'PASSIVE'
         % F_applied = fx*nx> + fy*ny> 
-        M = @(theta) [1/mTar 0 0; ...
-            0 1/mTar 0; ...
-            -r*cos(theta)/ITarzz -r*sin(theta)/ITarzz 1/ITarzz];
+        
+%         M = @(theta) [1/mTar 0 0; ...
+%             0 1/mTar 0; ...
+%             -r*cos(theta)/ITarzz -r*sin(theta)/ITarzz 1/ITarzz];
+        
+        M = @(theta) [cos(theta)/mTar -sin(theta)/mTar 0; ...
+            sin(theta)/mTar cos(theta)/mTar 0; ...
+            -r/ITarzz 0 1/ITarzz];
     
     case 'ACTIVE'
         % F_applied = fx*Tarx> + fy*Tary>
@@ -222,6 +234,7 @@ ypTarB_N = yp - r*sin(theta)*thetap;
 
 % Time array 
 t = (0:n-1)*dt; 
+tensions = zeros(4,length(t)); 
 
 % Loop for simulation 
 for ii = 1:n
@@ -237,21 +250,45 @@ for ii = 1:n
     U(:,ii) = u; 
     K(:,ii) = KineticEnergy;    
     Pcalc(:,ii) = minP;
-    
-    
-    if KineticEnergy < 0.0001
+    tensions(:,ii) = ( lsqnonneg(Awrist,u) )';
+
+    % Check to see if adhesive limit is exceeded
+    if strcmp(PASSIVE_OR_ACTIVE,'PASSIVE')
+                    
+        if (tensions(1,ii)>limits(1) || tensions(2,ii) > limits(2))
+            Q = Q(:,1:length(K));
+            t = t(1:length(K)); 
+            tensions = tensions(:,1:length(K)); 
+            success = 0; 
+            break
+        end
+    end
+
+    K_rest = K(1)*.02; 
+    K_rest = .03; 
+    if KineticEnergy < K_rest
         if strcmp(PASSIVE_OR_ACTIVE,'ACTIVE')
             Q = Q(:,1:length(K));
             t = t(1:length(K)); 
+            tensions = tensions(:,1:length(K)); 
             success = 1; 
             break
         elseif(norm(u)<.01)
-            Q = Q(:,1:length(K));
-            t = t(1:length(K)); 
+            
+            endInd = find(K>K_rest,1,'last');
+            Q = Q(:,1:endInd);
+            K = K(:,1:endInd);
+            t = t(1:endInd);
+            QTarB = QTarB(:,1:endInd);
+            U = U(:,1:endInd);
+            Pcalc = Pcalc(:,1:endInd);
+            tensions = tensions(:,1:endInd); 
             success = 1; 
             break
         end
     end
+    
+    
 
     
     % Give easy names
@@ -271,6 +308,9 @@ for ii = 1:n
     xpTarB_N = xp - r*cos(theta)*thetap;
     ypTarB_N = yp - r*sin(theta)*thetap;
     
+    
+    R_N2T = [cos(theta), sin(theta), 0;  -sin(theta), cos(theta), 0;  0, 0, 1]; % Rotation matrix from frame N to frame Tar 
+
     % Calculate Applied Force (from wrist)
     
     switch PASSIVE_OR_ACTIVE
@@ -283,7 +323,6 @@ for ii = 1:n
 %                  [ minP, Fnet, tensions, components ] = cvxGripMinP( Awrist, constraints, qpTarB);
 %                  u = Fnet;
 
-            R_TN = [cos(theta), sin(theta), 0;  -sin(theta), cos(theta), 0;  0, 0, 1]; % Rotation matrix from frame N to frame Tar 
             massMatrix = [mTar 0 0; 0 mTar 0; 0 0 ITarzz]; 
             massMatrix_Wrist = [mTar 0 0; 0 mTar 0; 0 0 (ITarzz+mTar*r^2)];
             
@@ -292,7 +331,7 @@ for ii = 1:n
                 case 'MOMENTUM'
                 % Oppose Momentum Control Law
                     massMatrix = [mTar 0 0; 0 mTar 0; 0 0 ITarzz]; 
-                    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -massMatrix*R_TN*q(4:6), constraints);
+                    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -massMatrix*R_N2T*q(4:6), constraints);
                     u = trans(r)*components; 
 
                 case 'MOMENTUM_WRIST'
@@ -302,7 +341,7 @@ for ii = 1:n
 
                 case 'DAMPING'
                 % Damping Control Law
-                    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_TN*q(4:6), constraints);
+                    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_N2T*q(4:6), constraints);
                     u = trans(r)*components; 
                     
                 case 'DAMPING_WRIST'
@@ -313,17 +352,17 @@ for ii = 1:n
                 case'RANGE_OF_MOTION'
                 % Range of Motion 
                     RangeOfMotion = [1/0.04 0 0; 0 1/.04 0; 0 0 1/1.345];
-                    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_TN*RangeOfMotion*q(4:6), constraints);
+                    [ beta, unit_vect, components ] = cvxGripBeta( Acm, -R_N2T*RangeOfMotion*q(4:6), constraints);
                     u = trans(r)*components; 
 
                 case 'POWER'
-                    [ minP, Fnet, tensions, components ] = cvxGripMinP( Acm, constraints, R_TN*q(4:6));
+                    [ minP, Fnet, tensions, components ] = cvxGripMinP( Acm, constraints, R_N2T*q(4:6));
 %                  u = Fnet;
                     u = trans(r)*components; 
 
                 case 'INTERPOLATION'
                     massMatrix = [mTar 0 0; 0 mTar 0; 0 0 ITarzz]; 
-                    [mag, components] = solveSurface_polar(fit_polar,(-massMatrix*R_TN*q(4:6))')
+                    [mag, components] = solveSurface_polar(fit_polar,(-massMatrix*R_N2T*q(4:6))')
                     % [mag, components] = solveSurface_polar(fit_polar,(-[xpTarB_RefT xpTarB_RefT q(6)]')')
                     % components = mag*(-massMatrix*R_TN*q(4:6));
                     % components = trans(r)*comp; 
@@ -342,7 +381,7 @@ for ii = 1:n
             fx = -xTarB_N * kx + -xpTarB_N * bx;
             fy = -yTarB_N * ky + -ypTarB_N * by;
             mz = -theta * kz -thetap * bz;
-            u = [fx fy mz]';
+            u = R_N2T*[fx fy mz]';
             
         case 'ONE_DOF'
             

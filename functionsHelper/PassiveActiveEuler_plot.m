@@ -1,4 +1,4 @@
-function PassiveActiveEuler_plot(Q,U,K,QTarB,t,limitWrist)
+function PassiveActiveEuler_plot(Q,U,K,QTarB,t,limitWrist,tensions,limits)
 
     % Position, Velocity, Acceleration
     figure; set(gca,'fontsize',16); hold on;
@@ -11,15 +11,15 @@ function PassiveActiveEuler_plot(Q,U,K,QTarB,t,limitWrist)
 
     %%%%%%%% States
     subplot(3,1,1); set(gca,'fontsize',16); hold on;
-    plot(t,Q(1,:),t, Q(2,:),t,Q(3,:))
+    plotyy(t, Q(1:2,:),t,Q(3,:))
     legend('x','y','theta')
     title('Position')
     subplot(3,1,2); set(gca,'fontsize',16); hold on;
-    plot(t,Q(4,:),t, Q(5,:), t, Q(6,:))
+    plotyy(t,Q(4:5,:),t, Q(6,:))
     legend('vx','vy','vtheta')
     title('Velocity')
     subplot(3,1,3); set(gca,'fontsize',16); hold on;
-    plot(t(1:end-1),dQ(4,:),t(1:end-1),dQ(5,:),t(1:end-1),dQ(6,:))
+    plotyy(t(1:end-1),dQ(4:5,:),t(1:end-1),dQ(6,:))
     legend('ax','ay','\alpha')
     title('Acceleration')
 
@@ -61,7 +61,21 @@ function PassiveActiveEuler_plot(Q,U,K,QTarB,t,limitWrist)
     plot3(U(1,:), U(3,:), U(2,:),'LineWidth',3); hold on; 
     plot3(U(1,:), U(3,:), U(2,:),'ko','MarkerSize',10)
     % plot3(U(1,:), zeros(size(U(3,:))), U(2,:),'g.','MarkerSize',10) % Passive Project for 1 DOF actuation 
-
+    
+    
+    %%%%%%%% Adhesive Loading
+    lm(1,:) = limits(1)*ones(1,length(t)); 
+    lm(2,:) = limits(2)*ones(1,length(t));
+    
+    size(t)
+    size(lm)
+    figure; set(gca,'fontsize',16); hold on 
+    plot(t,lm(1,:),'m--',t,lm(2,:),'b--',t,tensions(1,:),'m',t,tensions(2,:),'b','LineWidth',2); 
+    legend('limit1','limit2','adhesive1','adhesive2');
+    title('Adhesive Loading');
+    ylabel('Force [N]'); 
+    xlabel('time [s]')    
+    
     %%%%%%%% MEGA FIGURE 
     figure;
     subplot(4,1,1); set(gca,'fontsize',16); hold on;
@@ -99,4 +113,6 @@ function PassiveActiveEuler_plot(Q,U,K,QTarB,t,limitWrist)
     % 
     % addpath('functionsCvx','functionsHelper','dataGenerated')
     % print(fig,'ActiveGrasp','-dpdf')
+    
+
 end
