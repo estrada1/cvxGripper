@@ -24,10 +24,10 @@ limits = [24.0 19.28];
 
 %% Passive or Active gripper 
 
-%PASSIVE_OR_ACTIVE = 'PASSIVE';
-PASSIVE_OR_ACTIVE = 'ACTIVE';
+PASSIVE_OR_ACTIVE = 'PASSIVE';
+% PASSIVE_OR_ACTIVE = 'ACTIVE';
 %PASSIVE_OR_ACTIVE = 'ONE_DOF' 
-trialName = 'PaperRevisions'; 
+trialName = 'PaperRevisions_PassivePlot'; 
 limitsurfaceFile = '3DscatterLimit_AsymmetricPaper_Sept8';
 
 
@@ -142,8 +142,8 @@ switch MODE
         Knominal = 1/2*q0(4:6)'*massMatrix*q0(4:6); 
         
         figure; set(gca,'fontsize',20); hold on;
-        log(results_PASSIVE(:,1).^2*Knominal,results_PASSIVE(:,3),'*');
-        log(results_ACTIVE(:,1).^2*Knominal,results_ACTIVE(:,3),'*');
+        plot(results_PASSIVE(:,1).^2*Knominal,results_PASSIVE(:,3),'*');
+        plot(results_ACTIVE(:,1).^2*Knominal,results_ACTIVE(:,3),'*');
         %scatter(results(indFail,1),results(indFail,2),'rx'); hold on;
         ylabel('t_{settle}');
         xlabel('K [J]'); 
